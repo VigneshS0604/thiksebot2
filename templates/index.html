@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbot Interface</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            padding: 0;
+            background-color: #f0f0f0;
+        }
+        #chatbox {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        #messages {
+            margin-bottom: 20px;
+            height: 300px;
+            overflow-y: scroll;
+            border: 1px solid #ddd;
+            padding: 10px;
+            border-radius: 8px;
+        }
+        .message {
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+        .user-message {
+            background-color: #d9edf7;
+            text-align: right;
+        }
+        .bot-message {
+            background-color: #f7f7f9;
+        }
+        #input-container {
+            display: flex;
+            flex-direction: column;
+        }
+        select, input, button {
+            padding: 10px;
+            margin: 5px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div id="chatbox">
+        <div id="messages"></div>
+        <div id="input-container">
+            <select id="category">
+                <option value="about">About</option>
+                <option value="career">Career</option>
+            </select>
+            <select id="about-options">
+                <option value="Hi there!">Greetings</option>
+                <option value="What is your name?">What is your name?</option>
+                <option value="I want your contact details.">Contact details</option>
+                <option value="Where is your office located?">Office location</option>
+                <option value="How can I reach your HR department?">HR contact</option>
+                <option value="Who is your founder name?">Founder and CEO</option>
+                <option value="who your VicePresident?">Vice President</option>
+                <option value="your business partner">Business partner</option>
+                <option value="Your client details">Client details</option>
+                <option value="what are the service Do you provide">Services provided</option>
+                <option value="what is organization name">Organization name</option>
+            </select>
+            <select id="career-options">
+                <option value="What career opportunities">Career opportunities</option>
+                <option value="How can I reach your HR department?">HR contact</option>
+                <option value="How can I apply for a job?">Apply for a job</option>
+                <option value="Do you offer internships? do you provide any internship">Internships</option>
+            </select>
+            <input type="text" id="message" placeholder="Type your message here...">
+            <button onclick="sendMessage()">Send</button>
+        </div>
+    </div>
+
+    <script>
+        async function sendMessage() {
+            const category = document.getElementById('category').value;
+            const aboutMessage = document.getElementById('about-options').value;
+            const careerMessage = document.getElementById('career-options').value;
+            const message = document.getElementById('message').value || (category === 'about' ? aboutMessage : careerMessage);
+
+            if (message.trim() === '') {
+                alert('Please enter a message.');
+                return;
+            }
+
+            addMessage('user', message);
+
+            try {
+                const response = await fetch('/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ category, message }),
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    addMessage('bot', data.message);
+                } else {
+                    addMessage('bot', 'An error occurred: ' + data.message);
+                }
+            } catch (error) {
+                addMessage('bot', 'An error occurred: ' + error.message);
+            }
+
+            document.getElementById('message').value = '';
+        }
+
+        function addMessage(sender, message) {
+            const messageDiv = document.createElement('div');
+            messageDiv.classList.add('message');
+            messageDiv.classList.add(sender === 'user' ? 'user-message' : 'bot-message');
+            messageDiv.textContent = message;
+            document.getElementById('messages').appendChild(messageDiv);
+            document.getElementById('messages').scrollTop = document.getElementById('messages').scrollHeight;
+        }
+
+        document.getElementById('category').addEventListener('change', function() {
+            const category = this.value;
+            document.getElementById('about-options').style.display = category === 'about' ? 'block' : 'none';
+            document.getElementById('career-options').style.display = category === 'career' ? 'block' : 'none';
+        });
+
+        document.getElementById('category').dispatchEvent(new Event('change'));
+    </script>
+</body>
+</html>
